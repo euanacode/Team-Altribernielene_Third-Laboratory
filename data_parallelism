@@ -1,0 +1,100 @@
+from concurrent.futures import ProcessPoolExecutor
+import time
+
+
+def compute_payroll(employee):
+    name, salary = employee
+    
+    sss = salary * 0.045
+    philhealth = salary * 0.025
+    pagibig = salary * 0.02
+    withholding_tax = salary * 0.10
+
+    total_deduction = sss + philhealth + pagibig + withholding_tax
+    
+    # Calculate net salary
+    net_salary = salary - total_deduction
+    
+    return {
+        'name': name,
+        'gross_salary': salary,
+        'deductions': {
+            'SSS': sss,
+            'PhilHealth': philhealth,
+            'Pag-IBIG': pagibig,
+            'Withholding Tax': withholding_tax
+        },
+        'total_deduction': total_deduction,
+        'net_salary': net_salary
+    }
+
+
+def compute_payroll_data_parallel(employees):
+  
+    print(f"\n{'='*70}")
+    print(f"DATA PARALLELISM - Computing payroll for {len(employees)} employees")
+    print(f"{'='*70}\n")
+    
+    results = []
+    
+    with ProcessPoolExecutor(max_workers=5) as executor:
+        results = list(executor.map(compute_payroll, employees))
+    
+    for result in results:
+        print(f"{'─'*70}")
+        print(f"Employee: {result['name']}")
+        print(f"{'─'*70}")
+        print(f"  Gross Salary        : ₱{result['gross_salary']:>12,.2f}")
+        print(f"\n  Deductions:")
+        for deduction_name, amount in result['deductions'].items():
+            print(f"    {deduction_name:<18}: ₱{amount:>12,.2f}")
+        print(f"\n  Total Deduction     : ₱{result['total_deduction']:>12,.2f}")
+        print(f"  Net Salary          : ₱{result['net_salary']:>12,.2f}")
+        print()
+    
+    return results
+
+
+def display_summary(results):
+
+    total_gross = sum(r['gross_salary'] for r in results)
+    total_deductions = sum(r['total_deduction'] for r in results)
+    total_net = sum(r['net_salary'] for r in results)
+    
+    print(f"{'='*70}")
+    print(f"PAYROLL SUMMARY")
+    print(f"{'='*70}")
+    print(f"  Total Employees     : {len(results)}")
+    print(f"  Total Gross Salary  : ₱{total_gross:>12,.2f}")
+    print(f"  Total Deductions    : ₱{total_deductions:>12,.2f}")
+    print(f"  Total Net Salary    : ₱{total_net:>12,.2f}")
+    print(f"{'='*70}\n")
+
+
+def main():
+
+    employees = [
+        ("Alice", 25000),
+        ("Bob", 32000),
+        ("Charlie", 28000),
+        ("Diana", 40000),
+        ("Edward", 35000)
+    ]
+    
+    print("\n" + "="*70)
+    print("PART B: DATA PARALLELISM DEMONSTRATION")
+    print("="*70)
+    
+    start_time = time.time()
+    results = compute_payroll_data_parallel(employees)
+    end_time = time.time()
+    
+    display_summary(results)
+    
+    print(f"{'='*70}")
+    print(f"Execution completed in {end_time - start_time:.4f} seconds")
+    print(f"{'='*70}\n")
+
+
+if __name__ == "__main__":
+    main()
